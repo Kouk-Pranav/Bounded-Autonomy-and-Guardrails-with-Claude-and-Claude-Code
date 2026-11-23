@@ -1,0 +1,94 @@
+{
+  "pullRequest": {
+    "owner": "udacity",
+    "repo": "cd14715-simple-todo-app",
+    "number": 1
+  },
+  "fileReviews": [
+    {
+      "file": "tests/fixtures/cleanCode.fixture.ts",
+      "codeQuality": {
+        "file": "tests/fixtures/cleanCode.fixture.ts",
+        "issues": [
+          {
+            "line": 15,
+            "severity": "low",
+            "category": "style",
+            "description": "Consider using destructuring for imported functions",
+            "suggestion": "Change 'import { createTodo, updateTodo } from ../index' and use directly"
+          },
+          {
+            "line": 42,
+            "severity": "info",
+            "category": "best-practice",
+            "description": "Missing JSDoc for exported fixture function",
+            "suggestion": "Add JSDoc comment describing fixture purpose and return type"
+          }
+        ],
+        "overallScore": 92,
+        "summary": "Well-structured test fixture with minimal issues. Code follows best practices and conventions."
+      },
+      "testCoverage": {
+        "file": "tests/fixtures/cleanCode.fixture.ts",
+        "hasTests": true,
+        "testFiles": ["tests/cleanCode.test.ts"],
+        "untestedPaths": [
+          {
+            "type": "edge-case",
+            "location": "createMockTodo() - empty title edge case",
+            "priority": "low",
+            "reasoning": "Current tests don't validate behavior with empty strings",
+            "suggestedTest": "expect(createMockTodo({title: ''}).title).toBe('')"
+          }
+        ],
+        "coverageEstimate": 94,
+        "summary": "Excellent test coverage. Fixture functions are well tested with comprehensive scenarios."
+      },
+      "refactorings": {
+        "file": "tests/fixtures/cleanCode.fixture.ts",
+        "suggestions": [
+          {
+            "type": "extract-function",
+            "location": "lines 25-35",
+            "impact": "low",
+            "description": "Consider extracting mock user creation into separate factory function",
+            "before": "function createFixture() {\n  const user = { id: 1, name: 'Test' };\n  const todos = [...];\n  return { user, todos };\n}",
+            "after": "function createMockUser() { return { id: 1, name: 'Test' }; }\nfunction createFixture() {\n  return { user: createMockUser(), todos: [...] };\n}",
+            "benefits": "Better code reuse, easier to maintain test data, clearer intent"
+          }
+        ],
+        "summary": "Overall clean code structure. Only minor refactoring suggestion to improve reusability."
+      }
+    }
+  ],
+  "summary": {
+    "totalFiles": 1,
+    "overallScore": 92,
+    "criticalIssues": 0,
+    "highPriorityTests": 1,
+    "refactoringOpportunities": 1
+  },
+  "recommendations": [
+    {
+      "priority": "low",
+      "category": "Documentation",
+      "description": "Add JSDoc comments to public fixture functions to improve developer experience",
+      "files": ["tests/fixtures/cleanCode.fixture.ts"]
+    },
+    {
+      "priority": "low",
+      "category": "Best Practices",
+      "description": "Extract mock object creation into dedicated factory functions for better reusability",
+      "files": ["tests/fixtures/cleanCode.fixture.ts"]
+    }
+  ],
+  "metadata": {
+    "analyzedAt": "2026-11-21T10:30:00Z",
+    "duration": 2340,
+    "agentVersions": {
+      "code-quality": "1.0.0",
+      "test-coverage": "1.0.0",
+      "refactoring": "1.0.0"
+    }
+  }
+}

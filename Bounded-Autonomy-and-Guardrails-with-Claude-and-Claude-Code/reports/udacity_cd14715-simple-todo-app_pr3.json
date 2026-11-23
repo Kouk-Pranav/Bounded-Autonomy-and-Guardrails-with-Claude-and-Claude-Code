@@ -1,0 +1,358 @@
+{
+  "pullRequest": {
+    "owner": "udacity",
+    "repo": "cd14715-simple-todo-app",
+    "number": 3
+  },
+  "fileReviews": [
+    {
+      "file": "src/services/subscriptionService.ts",
+      "codeQuality": {
+        "file": "src/services/subscriptionService.ts",
+        "issues": [
+          {
+            "line": 15,
+            "severity": "critical",
+            "category": "security",
+            "description": "API key hardcoded in source code. This is a major security vulnerability.",
+            "suggestion": "Move to environment variables: const apiKey = process.env.STRIPE_API_KEY"
+          },
+          {
+            "line": 42,
+            "severity": "high",
+            "category": "security",
+            "description": "Missing input validation for subscription plan ID",
+            "suggestion": "Validate planId against whitelist of allowed plans before processing"
+          },
+          {
+            "line": 68,
+            "severity": "high",
+            "category": "bug-risk",
+            "description": "Missing error handling for Stripe API calls. Errors not logged or propagated.",
+            "suggestion": "Add try-catch with proper error logging and user-friendly error messages"
+          },
+          {
+            "line": 82,
+            "severity": "medium",
+            "category": "performance",
+            "description": "No rate limiting on subscription verification endpoint",
+            "suggestion": "Implement rate limiting to prevent brute force attacks"
+          },
+          {
+            "line": 95,
+            "severity": "medium",
+            "category": "maintainability",
+            "description": "Magic strings for subscription status ('active', 'pending', 'cancelled')",
+            "suggestion": "Create enum or constants: const SUBSCRIPTION_STATUS = { ACTIVE: 'active', ... }"
+          },
+          {
+            "line": 110,
+            "severity": "medium",
+            "category": "best-practice",
+            "description": "Missing logging for subscription state changes (audit trail)",
+            "suggestion": "Log all subscription modifications for compliance and debugging"
+          }
+        ],
+        "overallScore": 58,
+        "summary": "Critical security vulnerabilities present. API key exposure, input validation issues, and missing error handling require immediate attention before this can be merged."
+      },
+      "testCoverage": {
+        "file": "src/services/subscriptionService.ts",
+        "hasTests": false,
+        "testFiles": [],
+        "untestedPaths": [
+          {
+            "type": "function",
+            "location": "createSubscription()",
+            "priority": "critical",
+            "reasoning": "No tests for subscription creation - critical business logic",
+            "suggestedTest": "const result = await createSubscription('user123', 'premium'); expect(result.status).toBe('active')"
+          },
+          {
+            "type": "function",
+            "location": "cancelSubscription()",
+            "priority": "critical",
+            "reasoning": "No tests for cancellation flow",
+            "suggestedTest": "await cancelSubscription('sub_123'); expect(await getSubscription('sub_123')).toHaveProperty('status', 'cancelled')"
+          },
+          {
+            "type": "edge-case",
+            "location": "API error handling (network timeout, invalid response)",
+            "priority": "critical",
+            "reasoning": "No error scenarios tested",
+            "suggestedTest": "jest.mock('stripe'); stripeError.mockRejectedValue(new Error('Network timeout')); expect(createSubscription(...)).rejects.toThrow()"
+          },
+          {
+            "type": "edge-case",
+            "location": "Duplicate subscription prevention",
+            "priority": "high",
+            "reasoning": "No test validates idempotency",
+            "suggestedTest": "expect(await createSubscription(...)).toBe(await createSubscription(...))"
+          }
+        ],
+        "coverageEstimate": 0,
+        "summary": "CRITICAL: No test coverage for subscription service. All functionality untested, including error scenarios and edge cases."
+      },
+      "refactorings": {
+        "file": "src/services/subscriptionService.ts",
+        "suggestions": [
+          {
+            "type": "pattern-improvement",
+            "location": "lines 10-120",
+            "impact": "high",
+            "description": "Create Subscription domain model and use dependency injection for Stripe client",
+            "before": "export class SubscriptionService {\n  async createSubscription(userId, planId) {\n    const stripe = require('stripe')(API_KEY);\n    ...\n  }\n}",
+            "after": "interface IStripeProvider { createCustomer(...): Promise<Customer>; }\nexport class SubscriptionService {\n  constructor(private stripeProvider: IStripeProvider) {}\n  async createSubscription(userId: string, planId: string): Promise<Subscription> { ... }\n}",
+            "benefits": "Testable via mocking, decoupled from Stripe implementation, easier to swap providers"
+          },
+          {
+            "type": "extract-class",
+            "location": "lines 50-80",
+            "impact": "high",
+            "description": "Extract validation logic into SubscriptionValidator class",
+            "before": "if (!validPlans.includes(planId)) throw Error(...); if (!userId) throw Error(...)",
+            "after": "class SubscriptionValidator { validatePlanId(id: string): void { ... } validateUserId(id: string): void { ... } }",
+            "benefits": "Single responsibility, reusable validation, better error messages"
+          },
+          {
+            "type": "extract-function",
+            "location": "lines 65-100",
+            "impact": "medium",
+            "description": "Extract Stripe API communication into separate StripeAdapter",
+            "before": "const result = await stripe.subscriptions.create({...}); if (!result) throw Error(...)",
+            "after": "const adapter = new StripeAdapter(); const result = await adapter.createSubscription(...)",
+            "benefits": "Cleaner separation of concerns, easier to test, single point for Stripe changes"
+          }
+        ],
+        "summary": "Major refactoring needed: implement dependency injection, extract validation/adapter patterns, and add domain models."
+      }
+    },
+    {
+      "file": "src/components/PremiumFeatures.tsx",
+      "codeQuality": {
+        "file": "src/components/PremiumFeatures.tsx",
+        "issues": [
+          {
+            "line": 25,
+            "severity": "high",
+            "category": "maintainability",
+            "description": "Component directly calls API endpoints instead of using service layer",
+            "suggestion": "Use subscriptionService from src/services instead of direct API calls"
+          },
+          {
+            "line": 45,
+            "severity": "medium",
+            "category": "maintainability",
+            "description": "Sensitive payment info passed through component state",
+            "suggestion": "Use secure storage (HTTP-only cookies) for sensitive data, never in React state"
+          },
+          {
+            "line": 68,
+            "severity": "medium",
+            "category": "maintainability",
+            "description": "Missing loading state during async operations",
+            "suggestion": "Add loading state: setIsProcessing(true) during subscription creation"
+          },
+          {
+            "line": 82,
+            "severity": "low",
+            "category": "style",
+            "description": "Component is 300+ lines. Consider breaking into smaller sub-components",
+            "suggestion": "Extract PricingTable, SubscriptionForm into separate components"
+          }
+        ],
+        "overallScore": 65,
+        "summary": "Component architecture issues with architectural anti-patterns. Needs refactoring to follow best practices."
+      },
+      "testCoverage": {
+        "file": "src/components/PremiumFeatures.tsx",
+        "hasTests": false,
+        "testFiles": [],
+        "untestedPaths": [
+          {
+            "type": "function",
+            "location": "PremiumFeatures component - rendering",
+            "priority": "critical",
+            "reasoning": "No test validates component renders correctly",
+            "suggestedTest": "render(<PremiumFeatures />); expect(screen.getByText(/premium plans/i)).toBeInTheDocument()"
+          },
+          {
+            "type": "function",
+            "location": "Subscribe button click handler",
+            "priority": "critical",
+            "reasoning": "No test for subscription initiation flow",
+            "suggestedTest": "const user = userEvent.setup(); await user.click(screen.getByRole('button', { name: /subscribe/i })); expect(mockSubscribe).toHaveBeenCalled()"
+          },
+          {
+            "type": "edge-case",
+            "location": "Payment processing error handling",
+            "priority": "high",
+            "reasoning": "No test validates error display to user",
+            "suggestedTest": "jest.mock('subscriptionService'); mockSubscribe.mockRejectedValue(...); await user.click(...); expect(screen.getByText(/error/i)).toBeInTheDocument()"
+          }
+        ],
+        "coverageEstimate": 0,
+        "summary": "No test coverage for critical payment UI component. User flows completely untested."
+      },
+      "refactorings": {
+        "file": "src/components/PremiumFeatures.tsx",
+        "suggestions": [
+          {
+            "type": "extract-function",
+            "location": "lines 1-100",
+            "impact": "high",
+            "description": "Break 300+ line component into smaller components",
+            "before": "export function PremiumFeatures() { return (\n  <div>\n    <PricingTable> ... </PricingTable>\n    <SubscriptionForm> ... </SubscriptionForm>\n    <SuccessModal> ... </SuccessModal>\n  </div>\n); }",
+            "after": "export function PremiumFeatures() {\n  return (\n    <div>\n      <PricingTable plans={plans} onSelectPlan={...} />\n      <SubscriptionForm onSubmit={...} />\n      <SuccessModal isOpen={...} />\n    </div>\n  );\n}",
+            "benefits": "Improved testability, better component reusability, easier to maintain"
+          },
+          {
+            "type": "pattern-improvement",
+            "location": "lines 50-80",
+            "impact": "high",
+            "description": "Use custom hook for subscription state management",
+            "before": "const [subscription, setSubscription] = useState(...); const [loading, setLoading] = useState(...)",
+            "after": "const { subscription, loading, error, createSubscription } = useSubscription();",
+            "benefits": "Reusable logic, cleaner component, easier testing of hook separately"
+          }
+        ],
+        "summary": "Component needs significant refactoring: break into smaller components, use custom hooks, follow service layer pattern."
+      }
+    },
+    {
+      "file": "src/database/subscriptionSchema.ts",
+      "codeQuality": {
+        "file": "src/database/subscriptionSchema.ts",
+        "issues": [
+          {
+            "line": 12,
+            "severity": "high",
+            "category": "maintainability",
+            "description": "Timestamps not using database-native timestamp types",
+            "suggestion": "Use TIMESTAMP type with DEFAULT CURRENT_TIMESTAMP and ON UPDATE"
+          },
+          {
+            "line": 24,
+            "severity": "medium",
+            "category": "maintainability",
+            "description": "Missing foreign key constraint to users table",
+            "suggestion": "Add: FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+          },
+          {
+            "line": 35,
+            "severity": "medium",
+            "category": "best-practice",
+            "description": "Missing indexes on frequently queried columns",
+            "suggestion": "Add indexes: CREATE INDEX idx_subscription_user_id ON subscriptions(user_id); CREATE INDEX idx_subscription_status ON subscriptions(status)"
+          }
+        ],
+        "overallScore": 75,
+        "summary": "Database schema is functional but missing important database-level constraints and optimizations."
+      },
+      "testCoverage": {
+        "file": "src/database/subscriptionSchema.ts",
+        "hasTests": false,
+        "testFiles": [],
+        "untestedPaths": [
+          {
+            "type": "function",
+            "location": "Schema creation and migration",
+            "priority": "high",
+            "reasoning": "No test validates schema is created correctly",
+            "suggestedTest": "await runMigration(); const schema = await db.query('DESCRIBE subscriptions'); expect(schema).toContainColumn('status')"
+          },
+          {
+            "type": "edge-case",
+            "location": "Foreign key constraint enforcement",
+            "priority": "high",
+            "reasoning": "No test validates referential integrity",
+            "suggestedTest": "expect(() => insertSubscription(invalidUserId)).rejects.toThrow('Foreign key constraint')"
+          }
+        ],
+        "coverageEstimate": 0,
+        "summary": "Schema file not tested. Database migrations and constraints should be validated."
+      },
+      "refactorings": {
+        "file": "src/database/subscriptionSchema.ts",
+        "suggestions": [
+          {
+            "type": "pattern-improvement",
+            "location": "lines 1-50",
+            "impact": "medium",
+            "description": "Create migration file separate from schema definition",
+            "before": "export const schema = `CREATE TABLE...`;",
+            "after": "// schema.ts\nexport const SubscriptionSchema = { ... }\n// migrations/001-create-subscriptions.ts\nexport async function up(db) { await db.exec(SubscriptionSchema) }",
+            "benefits": "Better version control, easier to track schema evolution, standard migration pattern"
+          }
+        ],
+        "summary": "Minor refactoring recommended to follow database migration best practices."
+      }
+    }
+  ],
+  "summary": {
+    "totalFiles": 3,
+    "overallScore": 66,
+    "criticalIssues": 3,
+    "highPriorityTests": 7,
+    "refactoringOpportunities": 8
+  },
+  "recommendations": [
+    {
+      "priority": "critical",
+      "category": "Security",
+      "description": "BLOCKING: Remove hardcoded API key and move to environment variables immediately. This is a major security vulnerability.",
+      "files": ["src/services/subscriptionService.ts"]
+    },
+    {
+      "priority": "critical",
+      "category": "Security",
+      "description": "Add input validation for all user inputs before processing subscriptions (planId, userId, payment details)",
+      "files": ["src/services/subscriptionService.ts"]
+    },
+    {
+      "priority": "critical",
+      "category": "Testing",
+      "description": "Add comprehensive test coverage for subscription service (currently 0%). Include error scenarios and edge cases.",
+      "files": ["src/services/subscriptionService.ts"]
+    },
+    {
+      "priority": "critical",
+      "category": "Testing",
+      "description": "Add test coverage for PremiumFeatures component and user payment flows",
+      "files": ["src/components/PremiumFeatures.tsx"]
+    },
+    {
+      "priority": "high",
+      "category": "Error Handling",
+      "description": "Implement comprehensive error handling for Stripe API calls with proper logging",
+      "files": ["src/services/subscriptionService.ts"]
+    },
+    {
+      "priority": "high",
+      "category": "Architecture",
+      "description": "Implement dependency injection pattern for Stripe client to improve testability",
+      "files": ["src/services/subscriptionService.ts"]
+    },
+    {
+      "priority": "medium",
+      "category": "Database",
+      "description": "Add indexes on frequently queried columns (user_id, status) for better query performance",
+      "files": ["src/database/subscriptionSchema.ts"]
+    },
+    {
+      "priority": "medium",
+      "category": "Component Architecture",
+      "description": "Break down PremiumFeatures component into smaller sub-components for better maintainability",
+      "files": ["src/components/PremiumFeatures.tsx"]
+    }
+  ],
+  "metadata": {
+    "analyzedAt": "2026-11-21T12:00:00Z",
+    "duration": 5120,
+    "agentVersions": {
+      "code-quality": "1.0.0",
+      "test-coverage": "1.0.0",
+      "refactoring": "1.0.0"
+    }
+  }
+}
