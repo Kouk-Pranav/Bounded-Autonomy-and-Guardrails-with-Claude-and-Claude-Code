@@ -65,6 +65,14 @@ export class CodeReviewOrchestrator {
           model: this.model,
           agents,
           mcpServers,
+          allowedTools: [
+            'Task',
+            'mcp__github__get_pull_request',
+            'mcp__github__get_pull_request_files',
+            'mcp__github__search_repositories'
+          ],
+          settingSources: ['project'],
+          maxTurns: 20,
           outputFormat: {
             type: 'json_schema',
             schema: ReviewReportJSONSchema as any
@@ -72,14 +80,33 @@ export class CodeReviewOrchestrator {
         }
       })) {
         // Handle result messages
-        if ('result' in message) {
+        logger.debug('Message received', { messageKeys: Object.keys(message) });
+
+        // Check for structured output in various fields
+        if ('structured_output' in message) {
+          try {
+            const parsed = typeof message.structured_output === 'string'
+              ? JSON.parse(message.structured_output)
+              : message.structured_output;
+            reviewReport = ReviewReportSchema.parse(parsed);
+          } catch (parseError) {
+            logger.error('Failed to parse structured output', parseError);
+          }
+        } else if ('result' in message) {
           try {
             const parsed = typeof message.result === 'string'
               ? JSON.parse(message.result)
               : message.result;
             reviewReport = ReviewReportSchema.parse(parsed);
           } catch (parseError) {
-            logger.error('Failed to parse structured output', parseError);
+            logger.error('Failed to parse result', parseError);
+          }
+        } else if ('text' in message) {
+          try {
+            const parsed = JSON.parse((message as any).text);
+            reviewReport = ReviewReportSchema.parse(parsed);
+          } catch (parseError) {
+            logger.debug('Text is not JSON, continuing', { error: parseError instanceof Error ? parseError.message : String(parseError) });
           }
         }
       }

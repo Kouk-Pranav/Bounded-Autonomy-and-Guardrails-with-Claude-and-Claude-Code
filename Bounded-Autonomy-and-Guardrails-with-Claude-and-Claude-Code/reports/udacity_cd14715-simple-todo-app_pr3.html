@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Code Review Report - udacity/cd14715-simple-todo-app#3</title>
+  <title>Code Review Report</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -47,15 +47,15 @@
 
   <div class="summary">
     <div class="metric">
-      <div class="metric-value">66</div>
+      <div class="metric-value">32</div>
       <div class="metric-label">Overall Score</div>
     </div>
     <div class="metric">
-      <div class="metric-value">3</div>
+      <div class="metric-value">1</div>
       <div class="metric-label">Files Reviewed</div>
     </div>
     <div class="metric">
-      <div class="metric-value">3</div>
+      <div class="metric-value">5</div>
       <div class="metric-label">Critical Issues</div>
     </div>
     <div class="metric">
@@ -63,42 +63,46 @@
       <div class="metric-label">Tests Needed</div>
     </div>
     <div class="metric">
-      <div class="metric-value">8</div>
+      <div class="metric-value">10</div>
       <div class="metric-label">Refactorings</div>
     </div>
   </div>
 
   <h2>🎯 Top Recommendations</h2>
   <ul>
-    <li class="rec-critical">
-      <span class="priority">[CRITICAL]</span>
-      <strong>Security</strong>: BLOCKING: Remove hardcoded API key and move to environment variables immediately. This is a major security vulnerability.
-      <br><small>Files: src/services/subscriptionService.ts</small>
-    </li>
-    <li class="rec-critical">
-      <span class="priority">[CRITICAL]</span>
-      <strong>Security</strong>: Add input validation for all user inputs before processing subscriptions (planId, userId, payment details)
-      <br><small>Files: src/services/subscriptionService.ts</small>
-    </li>
-    <li class="rec-critical">
-      <span class="priority">[CRITICAL]</span>
-      <strong>Testing</strong>: Add comprehensive test coverage for subscription service (currently 0%). Include error scenarios and edge cases.
-      <br><small>Files: src/services/subscriptionService.ts</small>
-    </li>
-    <li class="rec-critical">
-      <span class="priority">[CRITICAL]</span>
-      <strong>Testing</strong>: Add test coverage for PremiumFeatures component and user payment flows
-      <br><small>Files: src/components/PremiumFeatures.tsx</small>
-    </li>
-    <li class="rec-high">
-      <span class="priority">[HIGH]</span>
-      <strong>Error Handling</strong>: Implement comprehensive error handling for Stripe API calls with proper logging
-      <br><small>Files: src/services/subscriptionService.ts</small>
-    </li>
-  </ul>
+      <li class="rec-critical">
+        <span class="priority">[CRITICAL]</span>
+        <strong>Security</strong>: URGENT: Eliminate raw credit card handling. Migrate to payment tokenization (Stripe, PayPal, Square) immediately. Never store or process full card numbers in application code. Use only tokens provided by certified payment processors to maintain PCI DSS compliance and reduce security liability.
+        <br><small>Files: src/premium.ts</small>
+      </li>
+
+      <li class="rec-critical">
+        <span class="priority">[CRITICAL]</span>
+        <strong>Financial Data Integrity</strong>: Implement database transaction management for payment+subscription workflow. Currently has race condition: payment succeeds but subscription update fails, creating orphaned charges. Use BEGIN/COMMIT/ROLLBACK to ensure atomic operations.
+        <br><small>Files: src/premium.ts</small>
+      </li>
+
+      <li class="rec-critical">
+        <span class="priority">[CRITICAL]</span>
+        <strong>Testing Coverage</strong>: Add comprehensive test suite for all 7 functions. Current coverage is 0%. Critical gaps: processPremiumPayment happy path and error scenarios, validatePaymentDetails with Luhn algorithm, chargeCard with processor integration, upgradeUserSubscription transaction handling.
+        <br><small>Files: src/premium.ts</small>
+      </li>
+
+      <li class="rec-high">
+        <span class="priority">[HIGH]</span>
+        <strong>Input Validation</strong>: Enhance payment card validation: implement Luhn algorithm for card numbers, validate numeric format only, verify CVV length matches card type (3 for Visa/MC, 4 for Amex). Current validation only checks length.
+        <br><small>Files: src/premium.ts</small>
+      </li>
+
+      <li class="rec-high">
+        <span class="priority">[HIGH]</span>
+        <strong>Error Handling & Logging</strong>: Replace generic errors and console.error with custom error classes and structured logging. Enable error codes for caller differentiation (INSUFFICIENT_FUNDS vs CARD_DECLINED). Ensure logs never expose sensitive payment data or database credentials.
+        <br><small>Files: src/premium.ts</small>
+      </li>
+    </ul>
 
   <footer>
-    Generated at 2026-11-21T12:00:00Z • Duration: 5120ms
+    Generated at 2026-11-23T08:10:21.626Z • Duration: 308780ms
   </footer>
 </body>
 </html>

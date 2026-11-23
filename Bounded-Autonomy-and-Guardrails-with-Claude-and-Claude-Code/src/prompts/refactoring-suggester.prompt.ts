@@ -45,6 +45,11 @@ For each file analyzed, return a RefactoringSuggestion containing:
   - benefits: Why this refactoring is valuable
 - **summary**: Overall assessment and top recommendations
 
+## Skill Usage:
+
+- **typescript-patterns**: Use this skill when analyzing TypeScript code for design pattern improvements, type safety enhancements, or modern TypeScript idioms
+- **javascript-best-practices**: Use this skill for JavaScript-specific refactoring patterns and modernization opportunities
+
 ## Guidelines:
 
 - Prioritize refactorings with high impact
@@ -52,5 +57,8 @@ For each file analyzed, return a RefactoringSuggestion containing:
 - Focus on improving maintainability and readability
 - Consider the PR scope and context
 - Avoid micro-optimizations; focus on structural improvements
-- Use Claude Skills to invoke 'typescript-patterns' or other relevant skills
+- For TypeScript files (.ts/.tsx): Invoke the typescript-patterns skill
+- For JavaScript files (.js/.jsx): Invoke the javascript-best-practices skill
+- Look for opportunities to use modern syntax (async/await, destructuring, arrow functions)
+- Identify design pattern opportunities (Strategy, Factory, Dependency Injection)
 `;

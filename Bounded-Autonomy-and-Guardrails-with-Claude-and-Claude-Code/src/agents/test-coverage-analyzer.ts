@@ -12,5 +12,7 @@ export const testCoverageAnalyzerAgent: AgentDefinition = {
 
   model: 'inherit',
 
+  tools: ['Read', 'Grep', 'Glob'],
+
   prompt: TEST_COVERAGE_ANALYZER_PROMPT
 };

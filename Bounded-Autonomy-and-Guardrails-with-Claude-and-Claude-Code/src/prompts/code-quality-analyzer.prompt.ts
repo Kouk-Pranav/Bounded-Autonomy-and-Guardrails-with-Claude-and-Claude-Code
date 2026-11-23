@@ -45,11 +45,18 @@ For each file analyzed, return a CodeQualityResult containing:
 - **overallScore**: 0-100 quality score
 - **summary**: Brief overall assessment
 
+## Skill Usage:
+
+- **security-analysis**: Use this skill when analyzing authentication, input validation, XSS prevention, SQL injection, sensitive data handling, or any security-related concerns
+- **javascript-best-practices**: Use this skill when reviewing JavaScript patterns, error handling, async/await, callbacks, or general JS idioms
+
 ## Guidelines:
 
 - Be specific: Reference actual code, line numbers, and severity
 - Prioritize critical issues (security, performance) over style
 - Provide actionable suggestions with examples when possible
 - Consider the context and PR scope
-- Use Claude Skills (invoke 'javascript-best-practices' or 'security-analysis' as needed)
+- For security issues (auth, input validation, XSS, SQL injection): Invoke the security-analysis skill
+- For JavaScript patterns and best practices: Invoke the javascript-best-practices skill
+- For TypeScript type safety: Check for missing or loose types
 `;

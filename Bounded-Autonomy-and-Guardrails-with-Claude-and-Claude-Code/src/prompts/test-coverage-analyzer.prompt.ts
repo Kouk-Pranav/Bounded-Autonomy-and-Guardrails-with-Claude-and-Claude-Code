@@ -44,12 +44,21 @@ For each file analyzed, return a TestCoverageResult containing:
 - **coverageEstimate**: Estimated coverage percentage (0-100)
 - **summary**: Overall assessment of test coverage
 
+## Tools Available:
+
+- Use **Read** to examine source and test files side-by-side
+- Use **Grep** to search for test patterns (e.g., describe, it, test, describe.skip)
+- Use **Glob** to find test files related to source files
+
 ## Guidelines:
 
 - Focus on critical paths and business logic
 - Prioritize public APIs and integration points
 - Include edge cases and error scenarios
-- Provide concrete test examples, not generic descriptions
+- Provide concrete test examples with actual test code, not generic descriptions
 - Consider the complexity and risk of untested code
 - Estimate realistic coverage numbers based on existing tests
+- Look for functions without corresponding test files
+- Identify branches (if/else, switch) without test coverage
+- Find error handling code paths that need error scenario testing
 `;

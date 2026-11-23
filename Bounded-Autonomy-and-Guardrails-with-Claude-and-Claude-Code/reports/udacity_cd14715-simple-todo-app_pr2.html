@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Code Review Report - udacity/cd14715-simple-todo-app#2</title>
+  <title>Code Review Report</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -47,58 +47,44 @@
 
   <div class="summary">
     <div class="metric">
-      <div class="metric-value">78</div>
+      <div class="metric-value">18</div>
       <div class="metric-label">Overall Score</div>
     </div>
     <div class="metric">
-      <div class="metric-value">2</div>
+      <div class="metric-value">1</div>
       <div class="metric-label">Files Reviewed</div>
     </div>
     <div class="metric">
-      <div class="metric-value">2</div>
+      <div class="metric-value">3</div>
       <div class="metric-label">Critical Issues</div>
     </div>
     <div class="metric">
-      <div class="metric-value">4</div>
+      <div class="metric-value">11</div>
       <div class="metric-label">Tests Needed</div>
     </div>
     <div class="metric">
-      <div class="metric-value">5</div>
+      <div class="metric-value">6</div>
       <div class="metric-label">Refactorings</div>
     </div>
   </div>
 
   <h2>🎯 Top Recommendations</h2>
   <ul>
-    <li class="rec-critical">
-      <span class="priority">[CRITICAL]</span>
-      <strong>Testing</strong>: Add comprehensive test coverage for SearchBar component (currently 0%). Include rendering, input handling, and debounce behavior.
-      <br><small>Files: src/components/SearchBar.tsx</small>
-    </li>
-    <li class="rec-high">
-      <span class="priority">[HIGH]</span>
-      <strong>Performance</strong>: Optimize search filter logic by using Set data structure for category lookups instead of array.includes()
-      <br><small>Files: src/services/searchService.ts</small>
-    </li>
-    <li class="rec-high">
-      <span class="priority">[HIGH]</span>
-      <strong>Bug Risk</strong>: Add null/undefined checks for searchTerm parameter to prevent runtime errors
-      <br><small>Files: src/services/searchService.ts</small>
-    </li>
-    <li class="rec-medium">
-      <span class="priority">[MEDIUM]</span>
-      <strong>Maintainability</strong>: Extract complex filter conditions into separate functions for better code organization and testability
-      <br><small>Files: src/services/searchService.ts</small>
-    </li>
-    <li class="rec-medium">
-      <span class="priority">[MEDIUM]</span>
-      <strong>Type Safety</strong>: Add proper TypeScript prop types and validation for SearchBar component
-      <br><small>Files: src/components/SearchBar.tsx</small>
-    </li>
-  </ul>
+      <li class="rec-critical">
+        <span class="priority">[CRITICAL]</span>
+        <strong>Security</strong>: Replace all string interpolation and concatenation with parameterized queries immediately. All three functions (searchTodos, searchTodosByStatus, getTodosByUser) contain critical SQL injection vulnerabilities that could allow attackers to access unauthorized data, modify database contents, or execute destructive commands.
+        <br><small>Files: src/todo.ts</small>
+      </li>
+
+      <li class="rec-critical">
+        <span class="priority">[CRITICAL]</span>
+        <strong>Testing</strong>: Implement comprehensive test suite with 24+ test cases covering SQL injection attacks, edge cases, error handling, type validation, and integration testing. Current 0% coverage combined with security vulnerabilities makes production deployment extremely risky.
+        <br><small>Files: src/todo.ts</small>
+      </li>
+    </ul>
 
   <footer>
-    Generated at 2026-11-21T11:15:00Z • Duration: 3850ms
+    Generated at 2026-11-23T08:07:26.282Z • Duration: 265430ms
   </footer>
 </body>
 </html>

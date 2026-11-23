@@ -12,5 +12,7 @@ export const refactoringSuggesterAgent: AgentDefinition = {
 
   model: 'inherit',
 
+  tools: ['Skill', 'Read', 'Grep', 'Glob'],
+
   prompt: REFACTORING_SUGGESTER_PROMPT
 };

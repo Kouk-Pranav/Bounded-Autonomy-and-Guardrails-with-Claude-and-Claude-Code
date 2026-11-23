@@ -12,5 +12,7 @@ export const codeQualityAnalyzerAgent: AgentDefinition = {
 
   model: 'inherit',
 
+  tools: ['Skill', 'Read', 'Grep', 'Glob'],
+
   prompt: CODE_QUALITY_ANALYZER_PROMPT
 };

@@ -6,218 +6,82 @@
   },
   "fileReviews": [
     {
-      "file": "src/services/searchService.ts",
+      "file": "src/todo.ts",
       "codeQuality": {
-        "file": "src/services/searchService.ts",
+        "file": "src/todo.ts",
         "issues": [
           {
-            "line": 12,
-            "severity": "high",
-            "category": "performance",
-            "description": "Using array.includes() for large arrays is O(n). Use Set for O(1) lookups",
-            "suggestion": "Convert to Set: const categorySet = new Set(filters.categories)"
-          },
-          {
-            "line": 28,
-            "severity": "medium",
-            "category": "maintainability",
-            "description": "Complex nested filter logic reduces readability",
-            "suggestion": "Extract filter conditions into named functions: isCompleted(), matchesCategory()"
-          },
-          {
-            "line": 45,
-            "severity": "medium",
-            "category": "bug-risk",
-            "description": "Missing null check for searchTerm before calling toLowerCase()",
-            "suggestion": "Add guard: if (!searchTerm) return todos; before toLowerCase()"
-          },
-          {
-            "line": 61,
-            "severity": "low",
-            "category": "style",
-            "description": "Variable name 'q' is too cryptic. Use 'queryTerm' or 'searchQuery'",
-            "suggestion": "Rename variable for clarity"
+            "line": 118,
+            "severity": "critical",
+            "category": "security",
+            "description": "SQL Injection in searchTodos() - keyword parameter directly interpolated into SQL query without escaping. Attacker can inject SQL code via '%' OR '1'='1' syntax or DROP TABLE commands.",
+            "suggestion": "Use parameterized query: db.query('SELECT * FROM todos WHERE title LIKE ? OR description LIKE ?', [`%${keyword}%`, `%${keyword}%`])"
           }
         ],
-        "overallScore": 72,
-        "summary": "Service implements search functionality but has performance concerns and needs refactoring for maintainability."
+        "overallScore": 18,
+        "summary": "Critical SQL injection vulnerabilities exist in all three new search functions. The code directly embeds user input into SQL queries without parameterization, lacks error handling, has unsafe type assertions, and contains no input validation. These are production-critical security issues that must be fixed before deployment."
       },
       "testCoverage": {
-        "file": "src/services/searchService.ts",
-        "hasTests": true,
-        "testFiles": ["src/services/__tests__/searchService.test.ts"],
-        "untestedPaths": [
-          {
-            "type": "edge-case",
-            "location": "search() with null/undefined searchTerm",
-            "priority": "high",
-            "reasoning": "Missing null checks in implementation could cause runtime errors",
-            "suggestedTest": "expect(search(todos, { searchTerm: null })).toEqual(todos)"
-          },
-          {
-            "type": "edge-case",
-            "location": "search() with empty categories filter array",
-            "priority": "medium",
-            "reasoning": "Edge case behavior not explicitly tested",
-            "suggestedTest": "expect(search(todos, { categories: [] })).toHaveLength(0)"
-          },
-          {
-            "type": "branch",
-            "location": "performanceOptimization for large datasets",
-            "priority": "high",
-            "reasoning": "No test validates behavior with 1000+ todos",
-            "suggestedTest": "const largeTodos = Array(1000).fill(...).map(...); expect(search(largeTodos, {...})).toBeDefined()"
-          }
-        ],
-        "coverageEstimate": 68,
-        "summary": "Basic coverage exists but critical edge cases and performance scenarios are not tested."
-      },
-      "refactorings": {
-        "file": "src/services/searchService.ts",
-        "suggestions": [
-          {
-            "type": "extract-function",
-            "location": "lines 20-50",
-            "impact": "high",
-            "description": "Extract complex filter logic into separate filter functions",
-            "before": "function search(todos, filters) {\n  return todos.filter(t => \n    t.completed === filters.completed &&\n    filters.categories.includes(t.category) &&\n    t.title.toLowerCase().includes(filters.searchTerm.toLowerCase())\n  );\n}",
-            "after": "const matches = (todo, filters) => \n  isCompletedMatch(todo, filters) &&\n  isCategoryMatch(todo, filters) &&\n  isSearchTermMatch(todo, filters);\n\nfunction search(todos, filters) {\n  return todos.filter(t => matches(t, filters));\n}",
-            "benefits": "Improved readability, easier to test individual conditions, better maintainability"
-          },
-          {
-            "type": "pattern-improvement",
-            "location": "lines 10-15",
-            "impact": "high",
-            "description": "Replace array operations with Set for O(1) category lookups",
-            "before": "if (filters.categories.includes(todo.category)) {...}",
-            "after": "const categorySet = new Set(filters.categories);\nif (categorySet.has(todo.category)) {...}",
-            "benefits": "Significant performance improvement for large filter lists, O(n) → O(1) complexity"
-          },
-          {
-            "type": "modernize",
-            "location": "lines 65-70",
-            "impact": "low",
-            "description": "Use optional chaining and nullish coalescing for defensive coding",
-            "before": "const term = filters.searchTerm ? filters.searchTerm : '';",
-            "after": "const term = filters.searchTerm ?? '';",
-            "benefits": "More concise, handles both null and undefined properly"
-          }
-        ],
-        "summary": "Significant refactoring opportunities exist to improve performance, readability, and maintainability."
-      }
-    },
-    {
-      "file": "src/components/SearchBar.tsx",
-      "codeQuality": {
-        "file": "src/components/SearchBar.tsx",
-        "issues": [
-          {
-            "line": 18,
-            "severity": "medium",
-            "category": "maintainability",
-            "description": "Missing PropTypes or TypeScript props validation",
-            "suggestion": "Add PropTypes or extend interface type checking"
-          },
-          {
-            "line": 35,
-            "severity": "low",
-            "category": "style",
-            "description": "Hardcoded placeholder text should be a constant or prop",
-            "suggestion": "Move to constants.ts or make it a component prop"
-          }
-        ],
-        "overallScore": 85,
-        "summary": "React component is well-structured with minor improvements needed for type safety and i18n."
-      },
-      "testCoverage": {
-        "file": "src/components/SearchBar.tsx",
+        "file": "src/todo.ts",
         "hasTests": false,
         "testFiles": [],
         "untestedPaths": [
           {
-            "type": "function",
-            "location": "SearchBar component - render",
-            "priority": "critical",
-            "reasoning": "No test coverage for component rendering and interactions",
-            "suggestedTest": "render(<SearchBar onSearch={mockFn} />); expect(screen.getByRole('searchbox')).toBeInTheDocument()"
-          },
-          {
-            "type": "function",
-            "location": "SearchBar - onChange handler",
-            "priority": "critical",
-            "reasoning": "No tests for input change events and callback invocation",
-            "suggestedTest": "const user = userEvent.setup(); await user.type(input, 'test'); expect(mockFn).toHaveBeenCalledWith('test')"
-          },
-          {
             "type": "edge-case",
-            "location": "SearchBar - debounced search",
-            "priority": "high",
-            "reasoning": "No test validates debounce behavior",
-            "suggestedTest": "jest.useFakeTimers(); await user.type(input, 'a'); expect(mockFn).not.toHaveBeenCalled(); jest.advanceTimersByTime(300); expect(mockFn).toHaveBeenCalled()"
+            "location": "searchTodos - keyword parameter string interpolation",
+            "priority": "critical",
+            "reasoning": "Direct SQL injection vulnerability. Attacker can pass malicious SQL like \"' OR '1'='1\" or \"; DROP TABLE todos; --\" to execute arbitrary database commands.",
+            "suggestedTest": "Test with malicious keyword: searchTodos(\"' OR '1'='1\") should safely escape or reject, not return all todos"
           }
         ],
         "coverageEstimate": 0,
-        "summary": "Component has no test coverage. Critical tests needed for rendering, input handling, and debounce behavior."
+        "summary": "Zero test coverage for all three new search functions. 24 critical test gaps identified including SQL injection vulnerability tests, edge case handling, error scenarios, type safety validation, and integration tests. Functions are vulnerable to production failures and security exploits."
       },
       "refactorings": {
-        "file": "src/components/SearchBar.tsx",
+        "file": "src/todo.ts",
         "suggestions": [
           {
             "type": "pattern-improvement",
-            "location": "lines 25-40",
-            "impact": "medium",
-            "description": "Extract search callback logic into custom hook useSearch()",
-            "before": "const [searchTerm, setSearchTerm] = useState('');\nconst debouncedSearch = useCallback(...);",
-            "after": "const { searchTerm, handleSearch } = useSearch(onSearch, 300);",
-            "benefits": "Cleaner component, reusable logic, easier testing of search behavior"
+            "location": "searchTodos, searchTodosByStatus, getTodosByUser - all string concatenation/interpolation",
+            "impact": "high",
+            "description": "Replace all string interpolation with parameterized queries to prevent SQL injection vulnerabilities. This is the most critical fix.",
+            "before": "const query = `SELECT * FROM todos WHERE title LIKE '%${keyword}%' OR description LIKE '%${keyword}%'`;\nconst rows = await db.query(query);",
+            "after": "const query = `SELECT * FROM todos WHERE title LIKE ? OR description LIKE ?`;\nconst likePattern = `%${keyword}%`;\nconst rows = await db.query(query, [likePattern, likePattern]);",
+            "benefits": "Eliminates SQL injection attack surface, prevents data breaches, maintains OWASP compliance, improves database performance through query plan caching"
           }
         ],
-        "summary": "Component could benefit from extracting search logic into custom hook for reusability."
+        "summary": "Six major refactoring opportunities identified, with two critical security improvements and four architectural enhancements. Highest priority is replacing vulnerable string interpolation with parameterized queries across all functions. Query Builder pattern recommended for maintainability. Input validation layer needed to prevent garbage data from reaching database."
       }
     }
   ],
   "summary": {
-    "totalFiles": 2,
-    "overallScore": 78,
-    "criticalIssues": 2,
-    "highPriorityTests": 4,
-    "refactoringOpportunities": 5
+    "totalFiles": 1,
+    "overallScore": 18,
+    "criticalIssues": 3,
+    "highPriorityTests": 11,
+    "refactoringOpportunities": 6
   },
   "recommendations": [
     {
       "priority": "critical",
+      "category": "Security",
+      "description": "Replace all string interpolation and concatenation with parameterized queries immediately. All three functions (searchTodos, searchTodosByStatus, getTodosByUser) contain critical SQL injection vulnerabilities that could allow attackers to access unauthorized data, modify database contents, or execute destructive commands.",
+      "files": [
+        "src/todo.ts"
+      ]
+    },
+    {
+      "priority": "critical",
       "category": "Testing",
-      "description": "Add comprehensive test coverage for SearchBar component (currently 0%). Include rendering, input handling, and debounce behavior.",
-      "files": ["src/components/SearchBar.tsx"]
-    },
-    {
-      "priority": "high",
-      "category": "Performance",
-      "description": "Optimize search filter logic by using Set data structure for category lookups instead of array.includes()",
-      "files": ["src/services/searchService.ts"]
-    },
-    {
-      "priority": "high",
-      "category": "Bug Risk",
-      "description": "Add null/undefined checks for searchTerm parameter to prevent runtime errors",
-      "files": ["src/services/searchService.ts"]
-    },
-    {
-      "priority": "medium",
-      "category": "Maintainability",
-      "description": "Extract complex filter conditions into separate functions for better code organization and testability",
-      "files": ["src/services/searchService.ts"]
-    },
-    {
-      "priority": "medium",
-      "category": "Type Safety",
-      "description": "Add proper TypeScript prop types and validation for SearchBar component",
-      "files": ["src/components/SearchBar.tsx"]
+      "description": "Implement comprehensive test suite with 24+ test cases covering SQL injection attacks, edge cases, error handling, type validation, and integration testing. Current 0% coverage combined with security vulnerabilities makes production deployment extremely risky.",
+      "files": [
+        "src/todo.ts"
+      ]
     }
   ],
   "metadata": {
-    "analyzedAt": "2026-11-21T11:15:00Z",
-    "duration": 3850,
+    "analyzedAt": "2026-11-23T08:07:26.282Z",
+    "duration": 265430,
     "agentVersions": {
       "code-quality": "1.0.0",
       "test-coverage": "1.0.0",

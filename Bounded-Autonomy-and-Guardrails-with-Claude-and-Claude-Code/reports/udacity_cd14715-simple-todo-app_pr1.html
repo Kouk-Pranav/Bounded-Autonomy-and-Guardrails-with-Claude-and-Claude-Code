@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Code Review Report - udacity/cd14715-simple-todo-app#1</title>
+  <title>Code Review Report</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -47,7 +47,7 @@
 
   <div class="summary">
     <div class="metric">
-      <div class="metric-value">92</div>
+      <div class="metric-value">87</div>
       <div class="metric-label">Overall Score</div>
     </div>
     <div class="metric">
@@ -59,31 +59,50 @@
       <div class="metric-label">Critical Issues</div>
     </div>
     <div class="metric">
-      <div class="metric-value">1</div>
+      <div class="metric-value">4</div>
       <div class="metric-label">Tests Needed</div>
     </div>
     <div class="metric">
-      <div class="metric-value">1</div>
+      <div class="metric-value">5</div>
       <div class="metric-label">Refactorings</div>
     </div>
   </div>
 
   <h2>🎯 Top Recommendations</h2>
   <ul>
-    <li class="rec-low">
-      <span class="priority">[LOW]</span>
-      <strong>Documentation</strong>: Add JSDoc comments to public fixture functions to improve developer experience
-      <br><small>Files: tests/fixtures/cleanCode.fixture.ts</small>
-    </li>
-    <li class="rec-low">
-      <span class="priority">[LOW]</span>
-      <strong>Best Practices</strong>: Extract mock object creation into dedicated factory functions for better reusability
-      <br><small>Files: tests/fixtures/cleanCode.fixture.ts</small>
-    </li>
-  </ul>
+      <li class="rec-critical">
+        <span class="priority">[CRITICAL]</span>
+        <strong>Testing</strong>: Add comprehensive unit tests for all security-critical functions. This file is labeled as a 'clean code' fixture but has zero test coverage. Create test suites for: (1) isValidEmail with edge cases including boundary TLD lengths, special characters, and malformed addresses; (2) sanitizeInput with various XSS vectors (script tags, event handlers, quotes in attributes); (3) createUser success and all error paths; (4) Concurrent user creation for ID uniqueness under load.
+        <br><small>Files: fixtures/clean-code.ts</small>
+      </li>
+
+      <li class="rec-high">
+        <span class="priority">[HIGH]</span>
+        <strong>Security Validation</strong>: Enhance email validation beyond the current simple regex. The current pattern `/^[^\s@]+@[^\s@]+\.[^\s@]+$/` accepts invalid emails and doesn't follow RFC 5322. Options: (1) Improve regex to enforce minimum 2-char TLD: `/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/`; (2) Use a proven validation library like 'email-validator'; (3) Implement server-side verification via email confirmation. For a 'clean code' fixture, at minimum add length validation and document production recommendations.
+        <br><small>Files: fixtures/clean-code.ts</small>
+      </li>
+
+      <li class="rec-high">
+        <span class="priority">[HIGH]</span>
+        <strong>Architecture</strong>: Implement dependency injection pattern for the database layer to enable testability. Extract saveUser logic into a UserRepository interface that can be injected. This decouples business logic from database implementation, allows different repository implementations (in-memory for tests, PostgreSQL for production), and enables proper unit testing without database dependencies.
+        <br><small>Files: fixtures/clean-code.ts</small>
+      </li>
+
+      <li class="rec-high">
+        <span class="priority">[HIGH]</span>
+        <strong>Design Pattern</strong>: Extract validation logic into a dedicated UserValidator class following Single Responsibility Principle. Currently, validation rules are embedded in createUser making them non-reusable and difficult to test independently. This extraction also enables better error messages distinguishing between missing email vs missing name.
+        <br><small>Files: fixtures/clean-code.ts</small>
+      </li>
+
+      <li class="rec-medium">
+        <span class="priority">[MEDIUM]</span>
+        <strong>Security Improvements</strong>: Enhance ID generation strategy. Current implementation using Math.random() lacks cryptographic strength and could have collision risks under high throughput. For production: (1) Use crypto.randomUUID() for better entropy and distribution; (2) Implement as strategy pattern to allow swapping different ID generation algorithms; (3) Consider using 'nanoid' library as proven alternative.
+        <br><small>Files: fixtures/clean-code.ts</small>
+      </li>
+    </ul>
 
   <footer>
-    Generated at 2026-11-21T10:30:00Z • Duration: 2340ms
+    Generated at 2026-11-23T08:01:58.825Z • Duration: 185533ms
   </footer>
 </body>
 </html>

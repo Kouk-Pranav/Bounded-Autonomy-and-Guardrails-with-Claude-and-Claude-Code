@@ -6,85 +6,247 @@
   },
   "fileReviews": [
     {
-      "file": "tests/fixtures/cleanCode.fixture.ts",
+      "file": "fixtures/clean-code.ts",
       "codeQuality": {
-        "file": "tests/fixtures/cleanCode.fixture.ts",
+        "file": "fixtures/clean-code.ts",
         "issues": [
           {
-            "line": 15,
-            "severity": "low",
-            "category": "style",
-            "description": "Consider using destructuring for imported functions",
-            "suggestion": "Change 'import { createTodo, updateTodo } from ../index' and use directly"
+            "line": 23,
+            "severity": "medium",
+            "category": "security",
+            "description": "Email regex pattern is overly simplistic and doesn't follow RFC 5322 standards. Pattern `/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/` accepts invalid emails like 'user@domain.c' and 'a@b.c' while rejecting some valid formats. This could allow malformed emails into the system.",
+            "suggestion": "Use a more robust email validation approach. Option 1: Enhance regex to require minimum 2-char TLD: `/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/`. Option 2: Use a dedicated library like 'email-validator' or 'validator.js'. Option 3: For production, implement server-side verification via email confirmation link."
           },
           {
-            "line": 42,
+            "line": 30,
+            "severity": "low",
+            "category": "best-practice",
+            "description": "HTML entity encoding covers common XSS vectors (<, >, \", ') but doesn't handle all potential attack vectors. Missing encoding for backticks and inadequate handling of context-aware XSS (JavaScript attributes, event handlers, URLs).",
+            "suggestion": "Consider extending sanitization for additional contexts or using a dedicated library like 'DOMPurify' or 'xss' package. Implement context-aware sanitization: different rules for HTML content, attributes, JavaScript, and URLs."
+          },
+          {
+            "line": 44,
+            "severity": "low",
+            "category": "maintainability",
+            "description": "Error message on line 44 combines two distinct validation checks into one message: 'Email and name are required'. This makes it impossible to know which field is actually missing, complicating debugging and user feedback.",
+            "suggestion": "Separate validation checks with specific error messages: `if (!input.email) throw new Error('Email is required');` and `if (!input.name) throw new Error('Name is required');` This improves debugging and provides better user feedback."
+          },
+          {
+            "line": 54,
+            "severity": "low",
+            "category": "security",
+            "description": "Email is converted to lowercase on line 54, but the original email from input object still contains the original potentially dangerous content. Inconsistent sanitization approach between email and name fields.",
+            "suggestion": "Document email sanitization strategy clearly or apply sanitization consistently. If email shouldn't contain special characters requiring HTML encoding, add validation. Consider: `if (!sanitizeInput(input.email).equals(input.email)) { throw new Error('Email contains invalid characters'); }`"
+          },
+          {
+            "line": 60,
             "severity": "info",
             "category": "best-practice",
-            "description": "Missing JSDoc for exported fixture function",
-            "suggestion": "Add JSDoc comment describing fixture purpose and return type"
+            "description": "ID generation on line 60 uses `Math.random()` which lacks cryptographic strength. With high throughput, could have collision risks and poor distribution. This may be acceptable for a fixture but not suitable for production.",
+            "suggestion": "For production use, replace `Math.random()` with cryptographically secure alternatives. Use `crypto.randomUUID()` for better randomness: `const id = crypto.randomUUID();` or libraries like 'nanoid' or 'uuid'. For this fixture, consider documenting the production alternative."
+          },
+          {
+            "line": 68,
+            "severity": "medium",
+            "category": "maintainability",
+            "description": "Function `saveUser` is marked async but has no actual implementation - the database query is commented out on line 81. Function throws no errors if save fails, creating potential for silent failures. This makes it impossible to test the actual save behavior.",
+            "suggestion": "Either implement actual error handling with meaningful error messages, or add clear `// TODO: Implement database save` comment. Consider: `try { await db.query(query, params); } catch (error) { throw new Error('Failed to persist user to database'); }`"
+          },
+          {
+            "line": 68,
+            "severity": "low",
+            "category": "security",
+            "description": "No error handling for potential database failures on line 81 where `db.query()` is commented. If this were executed, database errors would bubble up unhandled, potentially exposing sensitive database details in error messages.",
+            "suggestion": "Implement proper error handling: Wrap database call in try-catch block to sanitize error messages. Example: `try { await db.query(query, params); } catch (error) { throw new Error('Failed to create user'); }` Don't expose raw database errors to callers."
+          },
+          {
+            "line": 48,
+            "severity": "info",
+            "category": "best-practice",
+            "description": "Function `createUser` is marked async but input validation logic (lines 48-54) is entirely synchronous. The async keyword is only necessary for the database save operation. This slightly complicates testability and understanding of which operations are truly asynchronous.",
+            "suggestion": "No critical change required. Consider extracting validation into a separate sync function for better separation of concerns and testability: `function validateCreateUserInput(input: CreateUserInput): void { ... }` Then call it from createUser."
           }
         ],
-        "overallScore": 92,
-        "summary": "Well-structured test fixture with minimal issues. Code follows best practices and conventions."
+        "overallScore": 87,
+        "summary": "Well-written TypeScript fixture demonstrating clean code practices. Successfully implements proper TypeScript typing with interfaces, input validation and sanitization, SQL injection prevention via parameterized queries, and XSS prevention via HTML entity encoding. The code is well-documented with JSDoc comments and shows good function separation of concerns. Minor issues identified are primarily informational/low severity edge-case improvements rather than critical flaws. This file is well-suited for use as a 'clean code' control fixture achieving the target score of >= 85."
       },
       "testCoverage": {
-        "file": "tests/fixtures/cleanCode.fixture.ts",
-        "hasTests": true,
-        "testFiles": ["tests/cleanCode.test.ts"],
+        "file": "fixtures/clean-code.ts",
+        "hasTests": false,
+        "testFiles": [],
         "untestedPaths": [
           {
+            "type": "function",
+            "location": "isValidEmail (lines 24-27)",
+            "priority": "critical",
+            "reasoning": "Email validation is a core security and data integrity concern. Invalid emails directly bypass a critical security guard. Without testing, malformed emails could corrupt the database and bypass security controls.",
+            "suggestedTest": "describe('isValidEmail', () => { it('should accept valid emails', () => { expect(isValidEmail('user@example.com')).toBe(true); }); it('should reject emails without domain', () => { expect(isValidEmail('user@')).toBe(false); }); it('should reject emails without TLD', () => { expect(isValidEmail('user@localhost')).toBe(false); }); it('should reject emails with spaces', () => { expect(isValidEmail('user @example.com')).toBe(false); }); it('should handle edge cases with dots', () => { expect(isValidEmail('.user@example.com')).toBe(false); }); });"
+          },
+          {
+            "type": "function",
+            "location": "sanitizeInput (lines 32-39)",
+            "priority": "critical",
+            "reasoning": "XSS prevention is critical security concern. This function must properly escape HTML special characters to prevent malicious script injection. Insufficient sanitization could lead to stored XSS vulnerabilities affecting all users.",
+            "suggestedTest": "describe('sanitizeInput', () => { it('should escape HTML tags', () => { expect(sanitizeInput('<script>')).toBe('&lt;script&gt;'); }); it('should escape quotes', () => { expect(sanitizeInput('onclick=\"alert(1)\"')).toBe('onclick=&quot;alert(1)&quot;'); }); it('should handle complex XSS vectors', () => { const input = '<img src=\"x\" onerror=\"alert(1)\">'; expect(sanitizeInput(input)).toBe('&lt;img src=&quot;x&quot; onerror=&quot;alert(1)&quot;&gt;'); }); it('should preserve safe content', () => { expect(sanitizeInput('Hello World')).toBe('Hello World'); }); });"
+          },
+          {
+            "type": "function",
+            "location": "createUser (lines 44-66)",
+            "priority": "critical",
+            "reasoning": "Main public API function orchestrating validation, sanitization, and database operations. Without test coverage, cannot verify integration of security features, error handling, or proper user object creation. This is the most critical function to test.",
+            "suggestedTest": "describe('createUser', () => { it('should create user successfully with valid input', async () => { const user = await createUser({email: 'john@example.com', name: 'John'}); expect(user.email).toBe('john@example.com'); expect(user.name).toBe('John'); expect(user.id).toMatch(/^user_\\d+_[a-z0-9]+$/); }); it('should normalize email to lowercase', async () => { const user = await createUser({email: 'JOHN@EXAMPLE.COM', name: 'John'}); expect(user.email).toBe('john@example.com'); }); it('should sanitize name against XSS', async () => { const user = await createUser({email: 'john@example.com', name: '<script>'}); expect(user.name).not.toContain('<script>'); }); it('should throw when email is missing', async () => { await expect(createUser({email: '', name: 'John'})).rejects.toThrow(); }); it('should throw when name is missing', async () => { await expect(createUser({email: 'john@example.com', name: ''})).rejects.toThrow(); }); });"
+          },
+          {
+            "type": "branch",
+            "location": "createUser - error branches (lines 48-54)",
+            "priority": "high",
+            "reasoning": "All error paths in validation logic are untested. Cannot verify that proper errors are thrown for missing fields or invalid email format. Without testing these branches, error handling could fail silently.",
+            "suggestedTest": "Test all three error conditions separately: missing email, missing name, invalid email format. Verify that each throws correct error with appropriate message."
+          },
+          {
             "type": "edge-case",
-            "location": "createMockTodo() - empty title edge case",
-            "priority": "low",
-            "reasoning": "Current tests don't validate behavior with empty strings",
-            "suggestedTest": "expect(createMockTodo({title: ''}).title).toBe('')"
+            "location": "createUser - null/undefined input (line 44)",
+            "priority": "high",
+            "reasoning": "Function doesn't validate for null or undefined input, which could cause runtime crashes. Need to test graceful handling of these edge cases.",
+            "suggestedTest": "it('should handle null input', async () => { await expect(createUser(null as any)).rejects.toThrow(); }); it('should handle undefined input', async () => { await expect(createUser(undefined as any)).rejects.toThrow(); });"
+          },
+          {
+            "type": "edge-case",
+            "location": "createUser - whitespace-only input (line 48)",
+            "priority": "medium",
+            "reasoning": "Current validation only checks for empty strings, not whitespace-only input. Fields containing only spaces should be rejected but may pass validation.",
+            "suggestedTest": "it('should reject email that is only whitespace', async () => { await expect(createUser({email: '   ', name: 'User'})).rejects.toThrow(); }); it('should reject name that is only whitespace', async () => { await expect(createUser({email: 'user@example.com', name: '   '})).rejects.toThrow(); });"
+          },
+          {
+            "type": "edge-case",
+            "location": "createUser - very long inputs (lines 48-54)",
+            "priority": "medium",
+            "reasoning": "No validation for maximum string lengths. Excessively long inputs could cause database column overflow, performance issues, or memory problems.",
+            "suggestedTest": "it('should handle excessively long email', async () => { const longEmail = 'a'.repeat(1000) + '@example.com'; await expect(createUser({email: longEmail, name: 'User'})).rejects.toThrow(); }); it('should handle excessively long name', async () => { await expect(createUser({email: 'user@example.com', name: 'x'.repeat(10000)})).rejects.toThrow(); });"
+          },
+          {
+            "type": "edge-case",
+            "location": "createUser - concurrent creation (line 60)",
+            "priority": "high",
+            "reasoning": "ID generation uses timestamp + random, vulnerable to collisions under concurrent user creation. If multiple users created simultaneously, generated IDs might not be unique due to timestamp collisions.",
+            "suggestedTest": "it('should generate unique IDs even when called concurrently', async () => { const inputs = Array.from({length: 50}, (_, i) => ({email: `u${i}@ex.com`, name: `U${i}`})); const users = await Promise.all(inputs.map(createUser)); const ids = users.map(u => u.id); expect(new Set(ids).size).toBe(50); });"
+          },
+          {
+            "type": "edge-case",
+            "location": "sanitizeInput - special Unicode characters (line 32)",
+            "priority": "medium",
+            "reasoning": "Function may not properly handle emoji, RTL text, or other Unicode characters that could be used in XSS attacks. Unicode normalization attacks not covered.",
+            "suggestedTest": "it('should handle emoji', () => { expect(sanitizeInput('Hello 👋')).toBe('Hello 👋'); }); it('should handle RTL text', () => { const rtl = 'مرحبا'; expect(sanitizeInput(rtl)).toBe(rtl); });"
           }
         ],
-        "coverageEstimate": 94,
-        "summary": "Excellent test coverage. Fixture functions are well tested with comprehensive scenarios."
+        "coverageEstimate": 0,
+        "summary": "This newly added file has zero test coverage. All public functions and critical paths are untested. Despite being labeled a 'clean code fixture', it requires comprehensive test coverage to verify that security measures (XSS prevention, SQL injection prevention), validation logic, and error handling work correctly. Without tests, the actual behavior cannot be verified and regressions cannot be detected. Priority should be: (1) Email validation tests (critical security), (2) XSS sanitization tests (critical security), (3) createUser success and error paths (critical functionality), (4) Edge cases and boundary conditions (medium priority)."
       },
       "refactorings": {
-        "file": "tests/fixtures/cleanCode.fixture.ts",
+        "file": "fixtures/clean-code.ts",
         "suggestions": [
           {
+            "type": "pattern-improvement",
+            "location": "Lines 68-82 (saveUser and database integration)",
+            "impact": "high",
+            "description": "Database layer is tightly coupled to business logic with hardcoded parameterized query. This prevents testing and makes it impossible to swap database implementations. The saveUser function is not injectable and has no actual implementation.",
+            "before": "async function saveUser(user: User): Promise<void> {\n  const query = 'INSERT INTO users (id, email, name, created_at) VALUES ($1, $2, $3, $4)';\n  const params = [user.id, user.email, user.name, user.createdAt];\n  // await db.query(query, params);\n}",
+            "after": "export interface UserRepository {\n  save(user: User): Promise<void>;\n}\n\nexport class UserService {\n  constructor(private repository: UserRepository) {}\n\n  async createUser(input: CreateUserInput): Promise<User> {\n    // ... validation ...\n    const user: User = { /* ... */ };\n    await this.repository.save(user);\n    return user;\n  }\n}",
+            "benefits": "Enables dependency injection for testability; Decouples business logic from database implementation; Allows swapping repository implementations (in-memory, MongoDB, PostgreSQL, etc.); Easier to mock in unit tests without database."
+          },
+          {
             "type": "extract-function",
-            "location": "lines 25-35",
-            "impact": "low",
-            "description": "Consider extracting mock user creation into separate factory function",
-            "before": "function createFixture() {\n  const user = { id: 1, name: 'Test' };\n  const todos = [...];\n  return { user, todos };\n}",
-            "after": "function createMockUser() { return { id: 1, name: 'Test' }; }\nfunction createFixture() {\n  return { user: createMockUser(), todos: [...] };\n}",
-            "benefits": "Better code reuse, easier to maintain test data, clearer intent"
+            "location": "Lines 44-54 (validation logic within createUser)",
+            "impact": "high",
+            "description": "Validation logic is scattered within createUser function, violating Single Responsibility Principle. Makes validation rules non-reusable across other services and difficult to test independently.",
+            "before": "export async function createUser(input: CreateUserInput): Promise<User> {\n  if (!input.email || !input.name) {\n    throw new Error('Email and name are required');\n  }\n  if (!isValidEmail(input.email)) {\n    throw new Error('Invalid email format');\n  }\n  // ... rest of logic ...\n}",
+            "after": "export class UserValidator {\n  validateCreateInput(input: CreateUserInput): void {\n    if (!input.email || !input.name) {\n      throw new Error('Email and name are required');\n    }\n    if (!input.email.trim() === '') {\n      throw new Error('Email cannot be empty');\n    }\n    if (!isValidEmail(input.email)) {\n      throw new Error('Invalid email format');\n    }\n  }\n}\n\n// In service\nasync createUser(input: CreateUserInput): Promise<User> {\n  this.validator.validateCreateInput(input);\n  // ... rest of logic ...\n}",
+            "benefits": "Follows Single Responsibility Principle; Validation logic is reusable across services; Easier to test validation rules independently; More maintainable error messages; Clearer separation of concerns."
+          },
+          {
+            "type": "modernize",
+            "location": "Lines 44, 51, 68 (generic Error throws)",
+            "impact": "medium",
+            "description": "Using generic Error class for all exceptions makes error handling and differentiation difficult. Cannot programmatically distinguish between validation errors, missing fields, and other failures.",
+            "before": "if (!input.email || !input.name) {\n  throw new Error('Email and name are required');\n}\nif (!isValidEmail(input.email)) {\n  throw new Error('Invalid email format');\n}",
+            "after": "export class ValidationError extends Error {\n  constructor(message: string, public field: string, public code: string) {\n    super(message);\n    this.name = 'ValidationError';\n  }\n}\n\nexport class EmailValidationError extends ValidationError {\n  constructor(email: string) {\n    super(`Invalid email: ${email}`, 'email', 'INVALID_EMAIL');\n  }\n}\n\n// Usage\nif (!isValidEmail(input.email)) {\n  throw new EmailValidationError(input.email);\n}",
+            "benefits": "Fine-grained error handling and recovery; Better logging and monitoring with error codes; Type-safe error catching; More informative error context for debugging; Enables different handling for different error types."
+          },
+          {
+            "type": "pattern-improvement",
+            "location": "Lines 60-62 (generateId function)",
+            "impact": "medium",
+            "description": "ID generation strategy is hardcoded as a function. For production, different ID strategies may be needed (UUID, database sequences, timestamp-based). Current approach using Math.random() lacks cryptographic strength.",
+            "before": "function generateId(): string {\n  return `user_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;\n}",
+            "after": "export interface IdGenerator {\n  generate(): string;\n}\n\nexport class UuidIdGenerator implements IdGenerator {\n  generate(): string {\n    return `user_${crypto.randomUUID()}`;\n  }\n}\n\nexport class TimestampIdGenerator implements IdGenerator {\n  generate(): string {\n    return `user_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;\n  }\n}\n\n// In service\nconstructor(private idGenerator: IdGenerator) {}\nasync createUser(input: CreateUserInput): Promise<User> {\n  const user: User = { id: this.idGenerator.generate(), ... };\n}",
+            "benefits": "Strategy Pattern enables swapping ID generation algorithms; Supports UUID for better distribution and collision prevention; Testable with mock ID generators; Production-ready with crypto.randomUUID(); Future-proof for different ID schemes."
+          },
+          {
+            "type": "extract-function",
+            "location": "Lines 32-39 (sanitizeInput function)",
+            "impact": "medium",
+            "description": "Sanitization logic is a standalone function but should be part of a dedicated service for better composition, extension, and testability. Using individual replace() calls is less efficient than character-by-character approach.",
+            "before": "export function sanitizeInput(input: string): string {\n  return input\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&#039;');\n}",
+            "after": "export interface InputSanitizer {\n  sanitize(input: string): string;\n}\n\nexport class HtmlEntitySanitizer implements InputSanitizer {\n  private readonly SANITIZATION_MAP: Record<string, string> = {\n    '<': '&lt;',\n    '>': '&gt;',\n    '\"': '&quot;',\n    \"'\": '&#039;'\n  };\n\n  sanitize(input: string): string {\n    return input.split('').map(char => \n      this.SANITIZATION_MAP[char] || char\n    ).join('');\n  }\n}",
+            "benefits": "Follows Strategy Pattern for different sanitization approaches; Easier to extend with new sanitization rules; Slightly more performant character-by-character approach; Better separation of concerns; Testable in isolation."
           }
         ],
-        "summary": "Overall clean code structure. Only minor refactoring suggestion to improve reusability."
+        "summary": "Five key refactoring opportunities identified to enhance code quality, testability, and maintainability. The current implementation shows good security practices and clean structure, but can be significantly improved through architectural patterns. High-priority refactorings focus on enabling dependency injection for better testability and extracting validation logic to follow Single Responsibility Principle. Medium-priority refactorings improve error handling and ID generation strategy. The recommended refactored architecture would provide better separation of concerns, enhanced testability, and production-readiness while maintaining current security best practices."
       }
     }
   ],
   "summary": {
     "totalFiles": 1,
-    "overallScore": 92,
+    "overallScore": 87,
     "criticalIssues": 0,
-    "highPriorityTests": 1,
-    "refactoringOpportunities": 1
+    "highPriorityTests": 4,
+    "refactoringOpportunities": 5
   },
   "recommendations": [
     {
-      "priority": "low",
-      "category": "Documentation",
-      "description": "Add JSDoc comments to public fixture functions to improve developer experience",
-      "files": ["tests/fixtures/cleanCode.fixture.ts"]
+      "priority": "critical",
+      "category": "Testing",
+      "description": "Add comprehensive unit tests for all security-critical functions. This file is labeled as a 'clean code' fixture but has zero test coverage. Create test suites for: (1) isValidEmail with edge cases including boundary TLD lengths, special characters, and malformed addresses; (2) sanitizeInput with various XSS vectors (script tags, event handlers, quotes in attributes); (3) createUser success and all error paths; (4) Concurrent user creation for ID uniqueness under load.",
+      "files": [
+        "fixtures/clean-code.ts"
+      ]
     },
     {
-      "priority": "low",
-      "category": "Best Practices",
-      "description": "Extract mock object creation into dedicated factory functions for better reusability",
-      "files": ["tests/fixtures/cleanCode.fixture.ts"]
+      "priority": "high",
+      "category": "Security Validation",
+      "description": "Enhance email validation beyond the current simple regex. The current pattern `/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/` accepts invalid emails and doesn't follow RFC 5322. Options: (1) Improve regex to enforce minimum 2-char TLD: `/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/`; (2) Use a proven validation library like 'email-validator'; (3) Implement server-side verification via email confirmation. For a 'clean code' fixture, at minimum add length validation and document production recommendations.",
+      "files": [
+        "fixtures/clean-code.ts"
+      ]
+    },
+    {
+      "priority": "high",
+      "category": "Architecture",
+      "description": "Implement dependency injection pattern for the database layer to enable testability. Extract saveUser logic into a UserRepository interface that can be injected. This decouples business logic from database implementation, allows different repository implementations (in-memory for tests, PostgreSQL for production), and enables proper unit testing without database dependencies.",
+      "files": [
+        "fixtures/clean-code.ts"
+      ]
+    },
+    {
+      "priority": "high",
+      "category": "Design Pattern",
+      "description": "Extract validation logic into a dedicated UserValidator class following Single Responsibility Principle. Currently, validation rules are embedded in createUser making them non-reusable and difficult to test independently. This extraction also enables better error messages distinguishing between missing email vs missing name.",
+      "files": [
+        "fixtures/clean-code.ts"
+      ]
+    },
+    {
+      "priority": "medium",
+      "category": "Security Improvements",
+      "description": "Enhance ID generation strategy. Current implementation using Math.random() lacks cryptographic strength and could have collision risks under high throughput. For production: (1) Use crypto.randomUUID() for better entropy and distribution; (2) Implement as strategy pattern to allow swapping different ID generation algorithms; (3) Consider using 'nanoid' library as proven alternative.",
+      "files": [
+        "fixtures/clean-code.ts"
+      ]
     }
   ],
   "metadata": {
-    "analyzedAt": "2026-11-21T10:30:00Z",
-    "duration": 2340,
+    "analyzedAt": "2026-11-23T08:01:58.825Z",
+    "duration": 185533,
     "agentVersions": {
       "code-quality": "1.0.0",
       "test-coverage": "1.0.0",
